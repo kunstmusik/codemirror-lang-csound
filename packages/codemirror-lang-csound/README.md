@@ -16,6 +16,18 @@ CodeMirror 6 language support for Csound, covering CSD, ORC, and SCO files.
 npm install @kunstmusik/codemirror-lang-csound
 ```
 
+## Changelog
+
+### 1.0.1
+
+- Fixed the package `exports` condition ordering so newer Vite and Rolldown-based builds do not fail on the published package metadata.
+- No runtime API changes. This is a packaging and compatibility release on top of 1.0.0.
+
+### 1.0.0
+
+- Initial public release of the Csound CodeMirror 6 language package.
+- Shipped CSD, ORC, and SCO modes with autocomplete, semantic highlighting, hover info, and the rich opcode metadata entrypoint.
+
 ## Quick Start
 
 ```ts
@@ -90,4 +102,4 @@ Hover support lazy-loads that richer catalog automatically when it needs manual 
 
 ## V1 Scope
 
-This 1.0.0 baseline is aimed at editor support first. Some ambiguous opcode/assignment lines still fall back to generic-line parsing, and some alternate score-bin dialects are intentionally left as post-v1 follow-up work.
+The 1.0.x baseline is aimed at editor support first. Some ambiguous opcode/assignment lines still fall back to generic-line parsing, and some alternate score-bin dialects are intentionally left as post-v1 follow-up work.
