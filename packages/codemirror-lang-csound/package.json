@@ -1,0 +1,69 @@
+{
+  "name": "@kunstmusik/codemirror-lang-csound",
+  "version": "1.0.0",
+  "description": "CodeMirror 6 language support for Csound (CSD, ORC, SCO)",
+  "keywords": [
+    "codemirror",
+    "codemirror6",
+    "csound",
+    "lezer",
+    "music",
+    "editor"
+  ],
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./rich": {
+      "import": "./dist/opcodes-rich.js",
+      "require": "./dist/opcodes-rich.cjs",
+      "types": "./dist/opcodes-rich.d.ts"
+    }
+  },
+  "files": [
+    "dist/**"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kunstmusik/codemirror-lang-csound.git"
+  },
+  "homepage": "https://github.com/kunstmusik/codemirror-lang-csound#readme",
+  "bugs": {
+    "url": "https://github.com/kunstmusik/codemirror-lang-csound/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.0.0",
+    "@codemirror/language": "^6.10.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@lezer/common": "^1.2.0",
+    "@lezer/highlight": "^1.2.0",
+    "@lezer/lr": "^1.4.0"
+  },
+  "devDependencies": {
+    "@lezer/generator": "^1.7.0",
+    "esbuild": "^0.28.0",
+    "tslib": "^2.6.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "build": "lezer-generator src/csound.grammar -o src/parser && node scripts/build.mjs && tsc -p tsconfig.json",
+    "build:grammar": "lezer-generator src/csound.grammar -o src/parser",
+    "build:js": "node scripts/build.mjs",
+    "build:types": "tsc -p tsconfig.json",
+    "generate:opcodes": "node scripts/generate-opcode-catalog-from-manual.mjs --manual-dir ../../../manual",
+    "generate:opcodes:manual": "node scripts/generate-opcode-catalog-from-manual.mjs --manual-dir ../../../manual",
+    "generate:opcodes:z1": "node scripts/generate-opcode-catalog-from-z1.mjs",
+    "test": "node scripts/build.mjs && node --test"
+  }
+}

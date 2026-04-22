@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "npm run build --workspace packages/codemirror-lang-csound && npm run build --workspace packages/demo",
+    "test": "npm test --workspace packages/codemirror-lang-csound"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Aptos", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", monospace;
+  --color-ink: #d4d4d4;
+  --color-paper: #1e1e1e;
+  --color-copper: #c586c0;
+  --color-brass: #dcdcaa;
+  --color-patine: #4fc1ff;
+  --color-char: #252526;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    color: var(--color-ink);
+    background:
+      radial-gradient(circle at 12% 8%, rgb(79 193 255 / 0.12), transparent 28rem),
+      radial-gradient(circle at 84% 20%, rgb(197 134 192 / 0.12), transparent 28rem),
+      linear-gradient(135deg, #111111 0%, #1e1e1e 46%, #181818 100%);
+    font-family: var(--font-body);
+  }
+
+  button {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .editor-shell .cm-editor {
+    height: 100%;
+  }
+}
+
+@layer utilities {
+  .grain-overlay {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.03) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(circle at center, black, transparent 78%);
+  }
+}

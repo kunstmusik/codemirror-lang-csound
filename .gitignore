@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.d.ts
+!src/*.d.ts
+!packages/*/src/*.d.ts
+packages/*/.tsbuild/
+.DS_Store
