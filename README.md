@@ -1,5 +1,7 @@
 # codemirror-lang-csound
 
+[![npm version](https://img.shields.io/npm/v/%40kunstmusik%2Fcodemirror-lang-csound)](https://www.npmjs.com/package/@kunstmusik/codemirror-lang-csound)
+
 Monorepo for `@kunstmusik/codemirror-lang-csound`, a CodeMirror 6 language package for Csound.
 
 ## Packages

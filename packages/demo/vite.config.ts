@@ -2,7 +2,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+function githubPagesBase() {
+  const repository = process.env.GITHUB_REPOSITORY
+  if (!repository) return '/'
+
+  const [, repoName] = repository.split('/')
+  return repoName ? `/${repoName}/` : '/'
+}
+
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS ? githubPagesBase() : '/',
   plugins: [tailwindcss(), react()],
   build: {
     rollupOptions: {
