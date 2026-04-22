@@ -1,6 +1,6 @@
 {
   "name": "@kunstmusik/codemirror-lang-csound",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CodeMirror 6 language support for Csound (CSD, ORC, SCO)",
   "keywords": [
     "codemirror",

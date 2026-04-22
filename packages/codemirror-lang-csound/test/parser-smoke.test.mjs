@@ -410,9 +410,9 @@ test("switch statements tolerate blank lines around cases", () => {
   assert.equal(countNodes(tree, "DefaultBlock"), 1)
 })
 
-test("instrument ids accept p-fields and plus-prefixed names", () => {
+test("instrument ids accept lowercase p-fields and plus-prefixed names", () => {
   const text = [
-    "instr P1",
+    "instr p1",
     "endin",
     "",
     "instr +MyInstr",
@@ -422,11 +422,15 @@ test("instrument ids accept p-fields and plus-prefixed names", () => {
   const tree = parser.configure({ top: "OrchestraFile" }).parse(text)
   assert.equal(countErrors(tree), 0)
   assert.equal(countNodes(tree, "InstrumentDefinition"), 2)
+  assert.equal(countNodes(tree, "PField"), 1)
   assert.equal(countNodes(tree, "PlusInstrId"), 1)
 })
 
-test("instrument ids accept p-field suffixed names", () => {
+test("instrument ids accept uppercase P1-style names as identifiers", () => {
   const text = [
+    "instr P1",
+    "endin",
+    "",
     "instr P1_if",
     "endin",
     "",
@@ -436,7 +440,8 @@ test("instrument ids accept p-field suffixed names", () => {
   ].join("\n")
   const tree = parser.configure({ top: "OrchestraFile" }).parse(text)
   assert.equal(countErrors(tree), 0)
-  assert.equal(countNodes(tree, "InstrumentDefinition"), 2)
+  assert.equal(countNodes(tree, "InstrumentDefinition"), 3)
+  assert.equal(countNodes(tree, "PField"), 0)
 })
 
 test("structured expressions parse multiline calls and header-prefixed identifiers", () => {

@@ -18,6 +18,10 @@ npm install @kunstmusik/codemirror-lang-csound
 
 ## Changelog
 
+### 1.0.2
+
+- Fix reading pfields to tokens with lower-case p. 
+
 ### 1.0.1
 
 - Fixed the package `exports` condition ordering so newer Vite and Rolldown-based builds do not fail on the published package metadata.

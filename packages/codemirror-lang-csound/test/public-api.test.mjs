@@ -633,7 +633,7 @@ test("semantic analysis ignores member field segments in old-style inputs", asyn
 test("semantic analysis classifies UDO and named-instrument definitions", async () => {
   const { analyzeCsoundSemanticLine } = await import(indexModuleUrl)
   const opcodeLine = "opcode declik(ain):a"
-  const instrLine = "instr KillImpl, OtherImpl"
+  const instrLine = "instr P1, OtherImpl"
 
   assert.deepEqual(
     analyzeCsoundSemanticLine(opcodeLine).map(span => ({
@@ -649,7 +649,7 @@ test("semantic analysis classifies UDO and named-instrument definitions", async 
       kind: span.kind,
     })),
     [
-      { text: "KillImpl", kind: "instrumentName" },
+      { text: "P1", kind: "instrumentName" },
       { text: "OtherImpl", kind: "instrumentName" },
     ],
   )
@@ -697,6 +697,19 @@ test("semantic analysis marks plain xout payload identifiers and legacy xin list
       { text: "i1", kind: "output" },
       { text: "p2", kind: "pField" },
       { text: "a1", kind: "output" },
+    ],
+  )
+
+  const uppercasePFieldLikeLine = "a1 = P3 + p4"
+  assert.deepEqual(
+    analyzeCsoundSemanticLine(uppercasePFieldLikeLine).map(span => ({
+      text: uppercasePFieldLikeLine.slice(span.from, span.to),
+      kind: span.kind,
+    })),
+    [
+      { text: "a1", kind: "output" },
+      { text: "P3", kind: "input" },
+      { text: "p4", kind: "pField" },
     ],
   )
 })

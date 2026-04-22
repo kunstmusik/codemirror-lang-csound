@@ -1647,7 +1647,7 @@ function outputSemanticKindForVariable(name: string): "output" | "pField" {
 }
 
 function isPFieldName(name: string): boolean {
-  return /^[pP]\d+$/.test(name)
+  return /^p\d+$/.test(name)
 }
 
 function isNamedInstrumentName(name: string): boolean {

@@ -749,7 +749,7 @@ ScoreIfdefDirective {
   hashElse[@name=HashElse] { "#else" }
   hashEnd[@name=HashEnd] { "#end" }
 
-  pfield[@name=PField] { $[pP] $[0-9]+ }
+  pfield[@name=PField] { $[p] $[0-9]+ }
 
   arrayIdentifier[@name=ArrayIdentifier] { $[a-zA-Z_] $[a-zA-Z0-9_]* "[]" }
 
