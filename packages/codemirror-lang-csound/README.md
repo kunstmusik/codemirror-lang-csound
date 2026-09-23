@@ -18,14 +18,15 @@ npm install @kunstmusik/codemirror-lang-csound
 
 ## Changelog
 
-### 1.0.3 (unreleased)
+### 1.0.3
 
-- Add a language-only `/compat` entry for old option names. Keep colors, panels, and evaluation in host code.
+- Add a language-only `/compat` entry for old mode and completion option names. Colors, panels, and evaluation remain in host code.
 - Add generated node names and grammar-owned identifier groups under `/syntax`, with type tests and stale-artifact checks.
 - Parse Csound 7 declarations, multiline UDO signatures, Unicode names, boolean rates, and array expression indexing.
 - Keep Unicode and multiline UDOs available to completion, hover, and semantic highlighting.
+- Allow hosts to disable the built-in completion source with `csound({ completion: false })`.
 - Let browser bundlers load the rich help catalog as a separate chunk.
-- Add language-interface tests and a command to scan a Csound test checkout.
+- Add language-interface tests and a command to scan a Csound test checkout. Build the package automatically before packing it.
 
 ### 1.0.2
 

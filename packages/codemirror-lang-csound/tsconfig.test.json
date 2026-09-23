@@ -5,6 +5,7 @@
     "noEmit": true,
     "declaration": false,
     "emitDeclarationOnly": false,
+    "types": [],
     "skipLibCheck": false
   },
   "include": ["typecheck/**/*.ts"],

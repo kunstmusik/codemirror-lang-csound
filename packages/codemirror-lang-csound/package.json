@@ -68,6 +68,7 @@
   },
   "scripts": {
     "build": "npm run build:grammar && node scripts/build.mjs && tsc -p tsconfig.json",
+    "prepack": "npm run check:generated && npm run build",
     "build:grammar": "lezer-generator src/csound.grammar -o src/parser && node scripts/generate-syntax-nodes.mjs",
     "build:js": "node scripts/build.mjs",
     "build:types": "tsc -p tsconfig.json",
