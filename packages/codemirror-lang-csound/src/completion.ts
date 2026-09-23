@@ -1,9 +1,10 @@
 import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete"
 
 import { collectUserOpcodeNames, csoundOpcodeCatalog } from "./opcodes.js"
+import { typedIdentifierSource } from "./identifiers.js"
 
-const completionWord = /[A-Za-z_][A-Za-z0-9_]*(?::[A-Za-z_][A-Za-z0-9_]*)?/
-const completionValidFor = /^[A-Za-z_][A-Za-z0-9_]*(?::[A-Za-z_][A-Za-z0-9_]*)?$/
+const completionWord = new RegExp(typedIdentifierSource, "u")
+const completionValidFor = new RegExp("^(?:" + typedIdentifierSource + ")$", "u")
 
 const builtInOpcodeCompletions: Completion[] = csoundOpcodeCatalog.opcodes.map(opcode => ({
   label: opcode.name,

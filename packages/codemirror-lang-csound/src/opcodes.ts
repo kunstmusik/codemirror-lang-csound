@@ -1,4 +1,5 @@
 import opcodeCatalogJson from "./opcodes.json"
+import { identifierSource } from "./identifiers.js"
 
 export interface OpcodeSignature {
   outTypes: string
@@ -40,11 +41,12 @@ export const builtInOpcodeSignatures = new Map(
   csoundOpcodeCatalog.opcodes.map(opcode => [opcode.name, opcode.signatures] as const),
 )
 
-const udoDefinitionPattern = /^\s*opcode\s+([A-Za-z_][A-Za-z0-9_]*)/gm
+const udoDefinitionPattern = new RegExp("^\\s*(?:opcode|declare)\\s+(" + identifierSource + ")", "gmu")
 const legacyUdoDefinitionPattern =
-  /^\s*opcode\s+([A-Za-z_][A-Za-z0-9_]*)\s*,\s*([^,\s]+)\s*,\s*([^;\n]+)/gm
+  new RegExp("^\\s*opcode\\s+(" + identifierSource + ")\\s*,\\s*([^,\\s]+)\\s*,\\s*([^;\\n]+)", "gmu")
 const modernUdoDefinitionPattern =
-  /^\s*opcode\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*:\s*([^;\n]+)/gm
+  new RegExp("^\\s*(?:opcode|declare)\\s+(" + identifierSource + ")\\s*\\(([^)]*)\\)\\s*:\\s*(\\([^)]*\\)|[^;\\n]+)", "gmu")
+const typeAnnotationPattern = new RegExp(":(" + identifierSource + "(?:\\[\\])*)$", "u")
 
 export function collectUserOpcodeNames(documentText: string): Set<string> {
   return new Set(collectUserOpcodeSignatures(documentText).keys())
@@ -82,7 +84,9 @@ function addUserOpcodeSignature(
   signature: OpcodeSignature,
 ): void {
   const signatures = userOpcodes.get(name) ?? []
-  signatures.push(signature)
+  if (!signatures.some(existing => existing.outTypes === signature.outTypes && existing.inTypes === signature.inTypes)) {
+    signatures.push(signature)
+  }
   userOpcodes.set(name, signatures)
 }
 
@@ -97,7 +101,7 @@ function normalizeModernParamTypes(paramSpec: string): string {
   return splitCommaList(paramSpec)
     .map(param => {
       const trimmed = param.trim()
-      const typeAnnotation = trimmed.match(/:([A-Za-z_][A-Za-z0-9_]*(?:\[\])?)$/)?.[1]
+      const typeAnnotation = trimmed.match(typeAnnotationPattern)?.[1]
       if (typeAnnotation) return normalizeModernTypeName(typeAnnotation)
       return normalizeModernTypeName(trimmed)
     })
@@ -108,8 +112,8 @@ function normalizeModernTypeName(typeName: string): string {
   const trimmed = typeName.trim()
   if (!trimmed) return "."
 
-  const arraySuffix = trimmed.endsWith("[]") ? "[]" : ""
-  const base = arraySuffix ? trimmed.slice(0, -2) : trimmed
+  const arraySuffix = trimmed.match(/(?:\[\])+$/)?.[0] ?? ""
+  const base = arraySuffix ? trimmed.slice(0, -arraySuffix.length) : trimmed
   const first = base[0]
   if (first && /[A-Za-z.]/.test(first)) return `${first}${arraySuffix}`
   return `.${arraySuffix}`

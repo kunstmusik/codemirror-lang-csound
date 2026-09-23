@@ -1,6 +1,6 @@
 {
   "name": "@kunstmusik/codemirror-lang-csound",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CodeMirror 6 language support for Csound (CSD, ORC, SCO)",
   "keywords": [
     "codemirror",
@@ -19,6 +19,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./syntax": {
+      "types": "./dist/syntax.d.ts",
+      "import": "./dist/syntax.js",
+      "require": "./dist/syntax.cjs"
+    },
+    "./compat": {
+      "types": "./dist/compat.d.ts",
+      "import": "./dist/compat.js",
+      "require": "./dist/compat.cjs"
     },
     "./rich": {
       "types": "./dist/opcodes-rich.d.ts",
@@ -57,13 +67,16 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "build": "lezer-generator src/csound.grammar -o src/parser && node scripts/build.mjs && tsc -p tsconfig.json",
-    "build:grammar": "lezer-generator src/csound.grammar -o src/parser",
+    "build": "npm run build:grammar && node scripts/build.mjs && tsc -p tsconfig.json",
+    "build:grammar": "lezer-generator src/csound.grammar -o src/parser && node scripts/generate-syntax-nodes.mjs",
     "build:js": "node scripts/build.mjs",
     "build:types": "tsc -p tsconfig.json",
     "generate:opcodes": "node scripts/generate-opcode-catalog-from-manual.mjs --manual-dir ../../../manual",
     "generate:opcodes:manual": "node scripts/generate-opcode-catalog-from-manual.mjs --manual-dir ../../../manual",
     "generate:opcodes:z1": "node scripts/generate-opcode-catalog-from-z1.mjs",
-    "test": "node scripts/build.mjs && node --test"
+    "check:generated": "node scripts/generate-syntax-nodes.mjs --check",
+    "test:types": "tsc -p tsconfig.test.json",
+    "test": "npm run check:generated && npm run build && npm run test:types && node --test",
+    "test:csound": "npm run build:grammar && node scripts/scan-csound-tests.mjs"
   }
 }

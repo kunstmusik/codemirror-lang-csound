@@ -1,6 +1,7 @@
 import { syntaxTree } from "@codemirror/language"
 import { RangeSetBuilder, type Extension } from "@codemirror/state"
-import type { SyntaxNode } from "@lezer/common"
+import type { SyntaxNode, Tree } from "@lezer/common"
+import { csoundNodeNames as nodes, csoundNodeGroups, csoundNodeSet, type CsoundTopNodeName } from "./syntax.js"
 import {
   Decoration,
   EditorView,
@@ -16,6 +17,7 @@ import {
   type OpcodeSignature,
 } from "./opcodes.js"
 import { parser } from "./parser.js"
+import { identifierSource, typedIdentifierSource } from "./identifiers.js"
 
 interface TokenSpan {
   from: number
@@ -87,8 +89,8 @@ interface SemanticDocumentSignatureCache {
 
 interface SemanticDocumentParseCache {
   documentText: string
-  topRule: "CsdFile" | "OrchestraFile"
-  tree: any
+  topRule: CsoundTopNodeName
+  tree: Tree
 }
 
 interface SemanticLineAnalysisCache {
@@ -111,11 +113,12 @@ const ambiguousStatementOpcodes = new Set(["a", "b", "B", "i", "k", "p", "S"])
 const controlFlowConditionLeadingKeywords = new Set(["if", "elseif", "while", "until"])
 const ifConditionTrailingKeywords = ["rigoto", "reinit", "igoto", "kgoto", "ithen", "kthen", "goto", "then"]
 const loopConditionTrailingKeywords = ["do"]
-const documentBackedSemanticNodeNames = new Set([
-  "OrcGenericLine",
-  "AssignmentStatement",
-  "ReturnStatement",
-  "XoutStatement",
+const typedIdentifierNodes = csoundNodeSet(csoundNodeGroups.CsoundTypedIdentifier)
+const documentBackedSemanticNodeNames = csoundNodeSet([
+  nodes.OrcGenericLine,
+  nodes.AssignmentStatement,
+  nodes.ReturnStatement,
+  nodes.XoutStatement,
 ])
 const documentBackedGroupScanLimit = 64_000
 const ignoredSemanticVariableNames = new Set([
@@ -143,8 +146,15 @@ const ignoredSemanticVariableNames = new Set([
   "continue",
   "true",
   "false",
+  "truek",
+  "falsek",
+  "declare",
 ])
-const identifierPattern = /[A-Za-z_][A-Za-z0-9_]*(?:@global)?(?::[A-Za-z_][A-Za-z0-9_]*(?:\[\])?)?/g
+const identifierPattern = new RegExp(typedIdentifierSource, "gu")
+const standaloneIdentifierPattern = new RegExp("^" + identifierSource + "(?:@global)?(?:\\[\\])*(?::" + identifierSource + "(?:\\[\\])*)?$", "u")
+const indexedIdentifierPattern = new RegExp("^" + typedIdentifierSource + "(?:\\[[^\\]]+\\])+$", "u")
+const udoDefinitionPattern = new RegExp("^(?:opcode|declare)\\b\\s*(" + identifierSource + ")", "u")
+const typeAnnotationPattern = new RegExp(":(" + identifierSource + ")(?:\\[\\])*$", "u")
 
 const builtInOpcodeMark = Decoration.mark({
   class: "cm-csoundOpcode cm-csoundBuiltinOpcode",
@@ -259,39 +269,34 @@ function buildOpcodeDecorations(
       from: viewport.from,
       to: viewport.to,
       enter(node) {
-        if (
-          node.name === "TypedIdentifier" ||
-          node.name === "TypedArrayIdentifier" ||
-          node.name === "GlobalTypedIdentifier" ||
-          node.name === "GlobalTypedArrayIdentifier"
-        ) {
+        if (typedIdentifierNodes.has(node.name)) {
           addTypedIdentifierTypeAnnotation(builder, view, node.from, node.to)
           return
         }
 
-        if (node.name === "PField") {
+        if (node.name === nodes.PField) {
           builder.add(node.from, node.to, pFieldMark)
           return false
         }
 
-        if (node.name === "InstrId") {
+        if (node.name === nodes.InstrId) {
           const text = view.state.doc.sliceString(node.from, node.to)
           if (isNamedInstrumentName(text)) builder.add(node.from, node.to, instrumentNameMark)
           return
         }
 
-        if (node.name === "LegacyUdo" || node.name === "ModernUdo") {
+        if (node.name === nodes.LegacyUdo || node.name === nodes.ModernUdo) {
           const text = view.state.doc.sliceString(node.from, node.to)
           const range = udoDefinitionNameRange(text, node.from)
           if (range) builder.add(range.from, range.to, userOpcodeMark)
         }
 
-        if (node.name === "UdoReturnSpec") {
+        if (node.name === nodes.UdoReturnSpec) {
           addUdoReturnSpecTypeAnnotation(builder, view, node.from, node.to)
           return
         }
 
-        if (node.name === "ScoreOpcode") {
+        if (node.name === nodes.ScoreOpcode) {
           const text = view.state.doc.sliceString(node.from, node.to)
           const eventRange = scoreOpcodeEventTypeRange(node.from, node.to)
           const pfieldRange = scoreOpcodePFieldNumberRange(text, node.from)
@@ -300,7 +305,7 @@ function buildOpcodeDecorations(
           return false
         }
 
-        if (node.name === "MacroUsageToken") {
+        if (node.name === nodes.MacroUsageToken) {
           const text = view.state.doc.sliceString(node.from, node.to)
           for (const range of macroArgumentNumberRanges(text, node.from)) {
             builder.add(range.from, range.to, scoreNumberMark)
@@ -308,7 +313,7 @@ function buildOpcodeDecorations(
           return false
         }
 
-        if (node.name === "XoutStatement") {
+        if (node.name === nodes.XoutStatement) {
           const text = view.state.doc.sliceString(node.from, node.to)
           const decorations: Array<{ from: number; to: number; mark: Decoration }> = []
           for (const span of findSemanticSpans(text, node.from, userOpcodeSignatures)) {
@@ -326,7 +331,7 @@ function buildOpcodeDecorations(
           return false
         }
 
-        if (node.name === "ReturnStatement") {
+        if (node.name === nodes.ReturnStatement) {
           const text = view.state.doc.sliceString(node.from, node.to)
           const semanticSpans = findReturnSemanticSpans(text, node.from, userOpcodeSignatures) ?? []
           for (const span of semanticSpans) {
@@ -336,7 +341,7 @@ function buildOpcodeDecorations(
           return false
         }
 
-        if (node.name === "FunctionCallStatement") {
+        if (node.name === nodes.FunctionCallStatement) {
           const text = view.state.doc.sliceString(node.from, node.to)
           const semanticSpans = findSemanticSpans(text, node.from, userOpcodeSignatures)
           for (const span of semanticSpans) {
@@ -346,7 +351,7 @@ function buildOpcodeDecorations(
           return false
         }
 
-        if (node.name === "AssignmentStatement") {
+        if (node.name === nodes.AssignmentStatement) {
           const text = view.state.doc.sliceString(node.from, node.to)
           const semanticSpans = findSemanticSpans(text, node.from, userOpcodeSignatures)
           if (semanticSpans.length === 0) return
@@ -375,7 +380,7 @@ function buildOpcodeDecorations(
           return false
         }
 
-        if (node.name === "OrcExpr") {
+        if (node.name === nodes.OrcExpr) {
           if (!isControlFlowConditionExpression(documentText, node.from, node.to)) return
 
           const text = view.state.doc.sliceString(node.from, node.to)
@@ -387,12 +392,12 @@ function buildOpcodeDecorations(
           return false
         }
 
-        if (node.name === "UdoArgTypes") {
+        if (node.name === nodes.UdoArgTypes) {
           builder.add(node.from, node.to, typeAnnotationMark)
           return false
         }
 
-        if (node.name === "FunctionCallee" || node.name === "ScoreFunctionCallee") {
+        if (node.name === nodes.FunctionCallee || node.name === nodes.ScoreFunctionCallee) {
           const text = view.state.doc.sliceString(node.from, node.to)
           const kind = getCsoundSemanticKind(text, { userOpcodeSignatures })
           if (kind) {
@@ -401,7 +406,7 @@ function buildOpcodeDecorations(
           return
         }
 
-        if (node.name !== "OrcGenericLine") return
+        if (node.name !== nodes.OrcGenericLine) return
 
         const text = view.state.doc.sliceString(node.from, node.to)
         const decorations: Array<{ from: number; to: number; mark: Decoration }> = []
@@ -691,9 +696,10 @@ function findTypeAnnotationSpans(text: string, offset: number): SemanticSpan[] {
   const code = maskNonCodeText(text)
   const spans: SemanticSpan[] = []
 
-  for (const match of code.matchAll(/[A-Za-z_][A-Za-z0-9_]*(?:@global)?(:[A-Za-z_][A-Za-z0-9_]*(?:\[\])?)/g)) {
+  for (const match of code.matchAll(identifierPattern)) {
     const matchIndex = match.index ?? 0
     const colonIndex = match[0].indexOf(":")
+    if (colonIndex < 0) continue
     spans.push({
       from: offset + matchIndex + colonIndex,
       to: offset + matchIndex + match[0].length,
@@ -713,7 +719,7 @@ function findDefinitionSemanticSpans(code: string, offset: number): SemanticSpan
 
   const spans: SemanticSpan[] = []
   const instrIdText = code.slice(instrPrefix[0].length)
-  const namePattern = /[A-Za-z_][A-Za-z0-9_]*/g
+  const namePattern = new RegExp(identifierSource, "gu")
   for (const match of instrIdText.matchAll(namePattern)) {
     const value = match[0]
     if (!isNamedInstrumentName(value)) continue
@@ -776,7 +782,7 @@ function findXinSemanticSpans(code: string, offset: number): SemanticSpan[] {
 }
 
 function udoDefinitionNameRange(text: string, offset = 0): { from: number; to: number } | null {
-  const match = text.match(/^opcode\b\s*([A-Za-z_][A-Za-z0-9_]*)/)
+  const match = text.match(udoDefinitionPattern)
   if (!match || match.index === undefined) return null
   const nameStart = match[0].lastIndexOf(match[1])
   const from = offset + nameStart
@@ -1038,7 +1044,7 @@ function expandDocumentLineWindow(
   return { from: windowFrom, to: windowTo }
 }
 
-function parseSemanticDocumentTree(documentText: string): any {
+function parseSemanticDocumentTree(documentText: string): Tree {
   const topRule = semanticParseTopRule(documentText)
   const cachedParse = semanticDocumentParseCache
   if (cachedParse && cachedParse.documentText === documentText && cachedParse.topRule === topRule) {
@@ -1068,8 +1074,8 @@ function getDocumentUserOpcodeSignatures(documentText: string): Map<string, Opco
   return userOpcodeSignatures
 }
 
-function semanticParseTopRule(documentText: string): "CsdFile" | "OrchestraFile" {
-  return /<CsoundSynthesizer\b/i.test(documentText) ? "CsdFile" : "OrchestraFile"
+function semanticParseTopRule(documentText: string): CsoundTopNodeName {
+  return /<CsoundSynthesizer\b/i.test(documentText) ? nodes.CsdFile : nodes.OrchestraFile
 }
 
 function semanticSpansForParsedNode(
@@ -1078,7 +1084,7 @@ function semanticSpansForParsedNode(
   offset: number,
   userOpcodeSignatures: Map<string, OpcodeSignature[]>,
 ): SemanticSpan[] {
-  if (nodeName === "ReturnStatement") {
+  if (nodeName === nodes.ReturnStatement) {
     return findReturnSemanticSpans(text, offset, userOpcodeSignatures) ?? []
   }
 
@@ -1413,15 +1419,11 @@ function splitTopLevelCommaSegments(code: string): Array<{ from: number; to: num
 }
 
 function isStandaloneIdentifierSegment(value: string): boolean {
-  return /^[A-Za-z_][A-Za-z0-9_]*(?:@global)?(?:\[\])?(?::[A-Za-z_][A-Za-z0-9_]*(?:\[\])?)?$/.test(
-    value.trim(),
-  )
+  return standaloneIdentifierPattern.test(value.trim())
 }
 
 function isIndexedOutputSegment(value: string): boolean {
-  return /^[A-Za-z_][A-Za-z0-9_]*(?:@global)?(?::[A-Za-z_][A-Za-z0-9_]*(?:\[\])?)?(?:\[[^\]]+\])+$/u.test(
-    value.trim(),
-  )
+  return indexedIdentifierPattern.test(value.trim())
 }
 
 function isOldStyleOutputSegment(value: string): boolean {
@@ -1626,6 +1628,7 @@ function collectPlainAssignmentValueSpans(
   const rightOffset = offset + valueStart
 
   return collectIdentifierTokens(right, rightOffset)
+    .filter(token => !ignoredSemanticVariableNames.has(token.baseName))
     .filter(token => !tokenStartsFunctionCall(right, rightOffset, token))
     .map(token => ({
       from: token.from,
@@ -1651,7 +1654,7 @@ function isPFieldName(name: string): boolean {
 }
 
 function isNamedInstrumentName(name: string): boolean {
-  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(name)
+  return new RegExp("^" + identifierSource + "$", "u").test(name)
 }
 
 function trimSpan(text: string, from: number, to: number): { from: number; to: number } | null {
@@ -1726,7 +1729,7 @@ function outputRate(outputText: string): string | null {
   const explicitTypeRate = typedIdentifierRate(outputText)
   if (explicitTypeRate) return explicitTypeRate
 
-  const firstIdentifier = outputText.match(/[A-Za-z_][A-Za-z0-9_]*/) ?? []
+  const firstIdentifier = outputText.match(new RegExp(identifierSource, "u")) ?? []
   const name = firstIdentifier[0]
   if (!name) return null
   if (name[0] === "g" && /^[akifSpBba]/.test(name[1] ?? "")) return name[1]
@@ -1734,7 +1737,7 @@ function outputRate(outputText: string): string | null {
 }
 
 function typedIdentifierRate(value: string): string | null {
-  const match = value.trim().match(/:([A-Za-z_][A-Za-z0-9_]*)(?:\[\])?$/)
+  const match = value.trim().match(typeAnnotationPattern)
   return match?.[1]?.[0] ?? null
 }
 

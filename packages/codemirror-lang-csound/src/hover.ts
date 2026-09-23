@@ -1,4 +1,6 @@
 import { syntaxTree } from "@codemirror/language"
+import type { SyntaxNode } from "@lezer/common"
+import { csoundNodeNames as nodes, type CsoundNodeName } from "./syntax.js"
 import type { Extension } from "@codemirror/state"
 import { EditorView, hoverTooltip, type Tooltip } from "@codemirror/view"
 
@@ -12,6 +14,7 @@ import {
   type RichOpcodeCatalogEntry,
 } from "./opcodes.js"
 import { findSemanticSpans } from "./semantic.js"
+import { typedIdentifierSource } from "./identifiers.js"
 
 export interface CsoundHoverInfo {
   name: string
@@ -37,7 +40,7 @@ type RichOpcodeCatalogModule = {
   csoundRichOpcodeCatalog: OpcodeCatalog<RichOpcodeCatalogEntry>
 }
 
-const identifierPattern = /[A-Za-z_][A-Za-z0-9_]*(?::[A-Za-z_][A-Za-z0-9_]*)?/g
+const identifierPattern = new RegExp(typedIdentifierSource, "gu")
 const coreOpcodeEntriesByName = new Map(
   csoundOpcodeCatalog.opcodes.map(opcode => [opcode.name, opcode] as const),
 )
@@ -305,11 +308,11 @@ function findHoverTarget(view: EditorView, pos: number, side: number): HoverTarg
   const normalizedSide = side < 0 ? -1 : side > 0 ? 1 : 0
   const node = syntaxTree(view.state).resolveInner(pos, normalizedSide)
 
-  if (hasAncestor(node, "FunctionCallee") || hasAncestor(node, "ScoreFunctionCallee")) {
+  if (hasAncestor(node, nodes.FunctionCallee) || hasAncestor(node, nodes.ScoreFunctionCallee)) {
     return { from, to, name }
   }
 
-  if (!hasAncestor(node, "OrcGenericLine")) return null
+  if (!hasAncestor(node, nodes.OrcGenericLine)) return null
 
   const opcodeSpans = findSemanticSpans(line.text, line.from, userOpcodeSignatures).filter(span => {
     return span.kind === "builtInOpcode" || span.kind === "userOpcode"
@@ -338,11 +341,11 @@ function matchIdentifierInLine(
   return null
 }
 
-function hasAncestor(node: { name: string; parent: { name: string; parent: unknown } | null } | null, name: string): boolean {
+function hasAncestor(node: SyntaxNode | null, name: CsoundNodeName): boolean {
   let current = node
   while (current) {
     if (current.name === name) return true
-    current = current.parent as typeof node
+    current = current.parent
   }
   return false
 }
@@ -352,8 +355,5 @@ function unique(values: string[]): string[] {
 }
 
 async function loadRichOpcodeCatalogModule(): Promise<RichOpcodeCatalogModule> {
-  const importRichOpcodeCatalog = new Function(
-    "return import('@kunstmusik/codemirror-lang-csound/rich')",
-  ) as () => Promise<RichOpcodeCatalogModule>
-  return importRichOpcodeCatalog()
+  return import("./opcodes-rich.js")
 }

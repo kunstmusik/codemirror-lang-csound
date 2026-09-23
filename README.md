@@ -13,8 +13,8 @@ Monorepo for `@kunstmusik/codemirror-lang-csound`, a CodeMirror 6 language packa
 
 This is a good v1 release point.
 
-- The language package test suite currently passes 81 tests.
-- The latest external `csound/tests` scan covers 1190 `.csd` / `.orc` / `.sco` files and leaves 33 recovery cases.
+- The language package tests cover the parser, semantic analysis, public interfaces, and the language-only compatibility entry.
+- The 2026-09-20 `csound/tests` scan covers 1,266 `.csd` / `.orc` / `.sco` / `.udo` files and leaves 33 recovery cases.
 - Those remaining cases are all intentional parse-error fixtures or malformed inputs such as `regression/gen16.csd`.
 
 The remaining parser work is post-v1 material: full opcode/assignment disambiguation, whitespace-sensitive unbracketed score expressions, richer alternate score-bin parsing, and richer auxiliary XML/UI parsing.
@@ -26,6 +26,7 @@ npm install
 npm run build
 npm test
 npm run dev --workspace packages/demo
+npm run test:csound --workspace packages/codemirror-lang-csound -- /path/to/csound/tests
 ```
 
 ## Release Notes

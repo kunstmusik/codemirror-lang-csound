@@ -14,6 +14,6 @@
     "resolveJsonModule": true,
     "allowJs": true
   },
-  "include": ["src/index.ts", "src/opcodes-rich.ts", "src/parser.js", "src/parser.terms.js"],
+  "include": ["src/index.ts", "src/compat.ts", "src/syntax.ts", "src/opcodes-rich.ts", "src/parser.js", "src/parser.terms.js"],
   "exclude": ["node_modules", "dist"]
 }
