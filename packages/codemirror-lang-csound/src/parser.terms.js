@@ -59,7 +59,7 @@ export const
   globalTypedIdentifier = 57,
   typedIdentifier = 58,
   pfield = 59,
-  headerIdentifier = 60,
+  HeaderIdentifier = 60,
   legacyTypeIdentifier = 61,
   macroUsage = 62,
   xin = 63,

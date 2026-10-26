@@ -16,6 +16,11 @@
 
 kw<term> { @specialize[@name={term}]<identifier, term> }
 
+// Match a complete identifier so header names do not split variables such as krate.
+headerIdentifier {
+  @specialize[@name=HeaderIdentifier, group=CsoundIdentifier]<identifier, "sr" | "kr" | "ksmps" | "nchnls" | "nchnls_i" | "0dbfs">
+}
+
 CsdDocument {
   CsdOpenTag CsdItem* CsdCloseTag
 }
@@ -738,9 +743,8 @@ ScoreIfdefDirective {
     macroUsage,
     pfield,
     legacyTypeIdentifier,
-    headerIdentifier,
-    number,
     identifier,
+    number,
     "$",
     ".",
     "/"
@@ -774,8 +778,6 @@ ScoreIfdefDirective {
 
   arrayIdentifier[@name=ArrayIdentifier, group=CsoundIdentifier] { identifierStart identifierContinue* "[]" }
 
-  headerIdentifier[@name=HeaderIdentifier, group=CsoundIdentifier] { "sr" | "kr" | "ksmps" | "nchnls" | "nchnls_i" | "0dbfs" }
-
   legacyTypeIdentifier[@name=LegacyTypeIdentifier, group=CsoundIdentifier] {
     $[akifSwbB] @digit+ identifierContinue* |
     $[akifSwbB] $[A-Z_] identifierContinue* |
@@ -795,7 +797,8 @@ ScoreIfdefDirective {
   macroUsageArgs { "(" macroUsageArgChar* ")" }
   macroUsageArgChar { ![)] }
 
-  identifier[@name=Identifier, group=CsoundIdentifier] { identifierStart identifierContinue* }
+  // 0dbfs is the only header name that starts with a digit.
+  identifier[@name=Identifier, group=CsoundIdentifier] { identifierStart identifierContinue* | "0dbfs" }
 
   string[@name=String] { "\"" stringChar* "\"" }
   stringChar { ![\\\"\n] | "\\" _ }

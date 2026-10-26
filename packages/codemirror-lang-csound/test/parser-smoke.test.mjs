@@ -458,7 +458,10 @@ test("structured expressions parse multiline calls and header-prefixed identifie
   assert.equal(countErrors(tree), 0)
   assert.equal(countNodes(tree, "AssignmentStatement"), 2)
   assert.equal(countNodes(tree, "OrcCallExprList"), 1)
-  assert.equal(countNodes(tree, "HeaderPrefixedIdentifier"), 2)
+  assert.equal(countNodes(tree, "HeaderIdentifier"), 0)
+  const variables = []
+  tree.iterate({ enter(node) { if (node.name === "Identifier" && text.slice(node.from, node.to) === "krvb") variables.push(node) } })
+  assert.equal(variables.length, 2)
   assert.equal(countNodes(tree, "ReturnStatement"), 1)
   assert.equal(countNodes(tree, "OrcGenericLine"), 0)
 })
@@ -641,7 +644,7 @@ test("cs7 live-code orchestra fixture parses without errors", () => {
   assert.ok(countNodes(tree, "AssignmentStatement") > 500)
   assert.equal(countNodes(tree, "LabelStatement"), 3)
   assert.equal(countNodes(tree, "ArrayIdentifier"), 41)
-  assert.equal(countNodes(tree, "HeaderPrefixedIdentifier"), 6)
+  assert.equal(countNodes(tree, "HeaderPrefixedIdentifier"), 0)
 })
 
 test("score token extensions parse without errors", () => {
