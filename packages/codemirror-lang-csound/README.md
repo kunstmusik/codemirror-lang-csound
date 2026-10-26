@@ -18,6 +18,10 @@ npm install @kunstmusik/codemirror-lang-csound
 
 ## Changelog
 
+### 1.0.4
+
+- Treat header constants as complete identifiers so names such as `krate` and `ksmpsValue` are not split or highlighted as constants. Exact header names remain highlighted as constants.
+
 ### 1.0.3
 
 - Add a language-only `/compat` entry for old mode and completion option names. Colors, panels, and evaluation remain in host code.

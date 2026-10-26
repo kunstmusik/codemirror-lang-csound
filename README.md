@@ -9,10 +9,10 @@ Monorepo for `@kunstmusik/codemirror-lang-csound`, a CodeMirror 6 language packa
 - `packages/codemirror-lang-csound`: publishable language package for CSD, ORC, and SCO editing.
 - `packages/demo`: local Vite + React demo app for exercising the package during development.
 
-## Version 1.0.3
+## Version 1.0.4
 
-Version 1.0.3 adds Csound 7 syntax support, a language-only compatibility entry,
-and generated syntax names for host integrations. See the
+Version 1.0.4 fixes highlighting for identifiers that begin with header constants
+without changing how exact header names are highlighted. See the
 [package changelog](packages/codemirror-lang-csound/README.md#changelog) for details.
 
 The remaining parser work includes full opcode/assignment disambiguation,
@@ -48,8 +48,8 @@ After verifying the archive, publish with:
 npm publish --workspace packages/codemirror-lang-csound --access public
 ```
 
-Release 1.0.3 before updating the Web IDE dependency and lockfile. Blue's
-exact 1.0.2 dependency remains unchanged until Blue opts into the new version.
+Release 1.0.4 before updating the Web IDE dependency and lockfile. Blue's
+exact 1.0.2 dependency remains unchanged until Blue opts into 1.0.4.
 The opcode catalog generator expects a sibling `../manual` checkout when
 running the manual-based catalog script.
 
